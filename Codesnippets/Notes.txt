@@ -1,0 +1,3 @@
+Codesnippets are code that is not in use.
+
+Code probably collected from internal or external sources. For later use or proof-of-concept.
