@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Data;
 using System.Data.SQLite;
+using System.Collections;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace Server
 {
@@ -13,13 +16,13 @@ namespace Server
     {
         bool CreateTable(string tableName);
         bool WriteDb(int id, string teamName, string ipAddress, int engineWear);
-        void ReadDb(string ip);
+        void ReadDb(string ip, ClientData cli);
     }
 
 
     class DbConnection : IDbConnection
     {
-        public const bool DEBUG = false;
+        public const bool DEBUG = true;
 
         private static int _NumOfCars { get; set; }
         private static string _cs = "URI=file:noname.db";
@@ -57,7 +60,6 @@ namespace Server
                                              "TeamName TEXT," +
                                              "IPAddress TEXT," +
                                              "EngineWear INT)";
-
                 if (DEBUG)
                     MessageBox.Show(Convert.ToString(createTableCmd.CommandText));
 
@@ -111,26 +113,24 @@ namespace Server
         }
 
 
-        public void ReadDb(string ip)
+        public void ReadDb(string ip, ClientData cli)
         {
-
+            //ClientData cli = new ClientData();
+            
             try
             {
                 _con.Open();
 
                 var cmd = new SQLiteCommand(_con);
-                cmd.CommandText = "SELECT * FROM Cars WHERE ip = '" + ip + "'";
-
+                cmd.CommandText = "SELECT * FROM Cars WHERE IPAddress = '" + ip + "'";
                 SQLiteDataReader reader = cmd.ExecuteReader();
-
+                
                 reader.Read();
 
-                int idout = reader.GetInt32(0);
-                string teamout = reader.GetString(1);
-                string ipout = reader.GetString(2);
-                int wearout = reader.GetInt32(3);
-
-                
+                cli.ID = reader.GetInt32(0);
+                cli.TEAM = reader.GetString(1);
+                cli.IP = reader.GetString(2);
+                cli.WEAR = reader.GetInt32(3);
             }
             catch (Exception e)
             {
@@ -138,8 +138,79 @@ namespace Server
                     MessageBox.Show("Error: " + e.Message);
                 _con.Close();
             }
+            _con.Close();
         }
 
+    }
 
+    //public class Datas : ObservableCollection<ClientData> { };  // Just to reference it from xaml
+
+    //[Serializable]
+    public class ClientData : INotifyPropertyChanged
+    {
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public int Id;
+        public string Team;
+        string Ip;
+        int Wear;        
+
+        public int ID
+        {
+            get { return Id; }
+            set
+            {
+                Id = value;
+                OnPropertyChanged("ID");
+            }
+        }
+        
+        public string TEAM
+        {
+            get { return Team; }
+            set 
+            {
+                Team = value;
+                OnPropertyChanged("TEAM");
+            }
+        }
+
+        public string IP
+        {
+            get { return Ip; }
+            set
+            {
+                Ip = value;
+                OnPropertyChanged("IP");
+            }
+        }
+
+        public int WEAR
+        {
+            get { return Wear; }
+            set
+            {
+                Wear = value;
+                OnPropertyChanged("WEAR");
+            }
+        }
+
+        public void Updated()
+        {
+            OnPropertyChanged("ID");
+            OnPropertyChanged("TEAM");
+            OnPropertyChanged("IP");
+            OnPropertyChanged("WEAR");
+        }
+
+        protected void OnPropertyChanged(string name)
+        {
+            PropertyChangedEventHandler handl = PropertyChanged;
+            if (handl != null)
+            {
+                handl(this, new PropertyChangedEventArgs(name));
+            }
+
+        }
     }
 }
