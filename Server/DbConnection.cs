@@ -203,6 +203,7 @@ namespace Server
             OnPropertyChanged("WEAR");
         }
 
+
         protected void OnPropertyChanged(string name)
         {
             PropertyChangedEventHandler handl = PropertyChanged;
